@@ -1,40 +1,44 @@
 version: '3.8'
-services:
-  db:
-    image: postgres:latest
-    environment:
-      POSTGRES_DB: proect_mr
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d proect_mr"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - app-network
-    volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # Монтируем init.sql в /docker-entrypoint-initdb.d/
 
+services:
+  # Сервис базы данных
+  db:
+    image: postgres:latest  # Используем официальный образ Postgres
+    environment:
+      POSTGRES_DB: proect_mr  # Имя базы данных
+      POSTGRES_USER: postgres  # Имя пользователя базы данных
+      POSTGRES_PASSWORD: 123  # Пароль для базы данных
+    ports:
+      - "5432:5432"  # Пробрасываем порт 5432 на хост
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d proect_mr"]  # Проверка состояния базы данных
+      interval: 10s  # Интервал между проверками
+      timeout: 5s  # Тайм-аут проверки
+      retries: 5  # Количество попыток до признания сервиса недоступным
+    networks:
+      - app-network  # Подключение к общей сети
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # Монтируем init.sql для инициализации базы данных
+
+  # Сервис приложения
   app:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: .  # Контекст сборки - текущая директория
+      dockerfile: Dockerfile  # Путь к Dockerfile
     depends_on:
       db:
-        condition: service_healthy
+        condition: service_healthy  # Запуск приложения после готовности базы данных
     environment:
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_NAME: proect_mr
-      DB_USER: postgres
-      DB_PASSWORD: 123
+      DB_HOST: db  # Хост базы данных
+      DB_PORT: 5432  # Порт базы данных
+      DB_NAME: proect_mr  # Имя базы данных
+      DB_USER: postgres  # Имя пользователя базы данных
+      DB_PASSWORD: 123  # Пароль для базы данных
     networks:
-      - app-network
-    restart: on-failure
+      - app-network  # Подключение к общей сети
+    restart: on-failure  # Перезапуск приложения при ошибке
 
+# Определение сети
 networks:
   app-network:
-    driver: bridge
+    driver: bridge  # Тип сети - bridge

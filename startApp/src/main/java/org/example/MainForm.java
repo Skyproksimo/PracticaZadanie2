@@ -18,6 +18,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
+/**
+ * Класс главной формы приложения.
+ */
 public class MainForm extends JFrame {
 
     private DefaultTableModel messagesTableModel;
@@ -28,6 +31,9 @@ public class MainForm extends JFrame {
     private JList<String> decryptionList;
     private DefaultListModel<String> decryptionListModel;
 
+    /**
+     * Конструктор главной формы.
+     */
     public MainForm() {
         setTitle("Главная форма");
         setSize(800, 600);
@@ -38,6 +44,9 @@ public class MainForm extends JFrame {
         loadMessages();
     }
 
+    /**
+     * Инициализация элементов пользовательского интерфейса.
+     */
     public void initializeUI() {
         JPanel panel = new JPanel(new BorderLayout());
         getContentPane().add(panel);
@@ -71,7 +80,6 @@ public class MainForm extends JFrame {
 
         panel.add(inputPanel, BorderLayout.NORTH);
 
-
         messagesTableModel = new DefaultTableModel(new Object[]{"ID", "Сообщение"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -82,12 +90,10 @@ public class MainForm extends JFrame {
         JScrollPane messagesScrollPane = new JScrollPane(messagesTable);
         panel.add(messagesScrollPane, BorderLayout.WEST);
 
-
         TableColumn idColumn = messagesTable.getColumnModel().getColumn(0);
         idColumn.setMinWidth(0);
         idColumn.setMaxWidth(0);
         idColumn.setPreferredWidth(0);
-
 
         decryptionListModel = new DefaultListModel<>();
         decryptionList = new JList<>(decryptionListModel);
@@ -100,9 +106,9 @@ public class MainForm extends JFrame {
                 if (!e.getValueIsAdjusting()) {
                     int selectedRow = messagesTable.getSelectedRow();
                     if (selectedRow != -1) {
-                        int messageId = (int) messagesTableModel.getValueAt(selectedRow, 0);displayDecryption(messageId); // Отображение расшифровки выбранного сообщения
-                    }
-                }
+                        int messageId = (int) messagesTableModel.getValueAt(selectedRow, 0);
+                        displayDecryption(messageId); // Отображение расшифровки выбранного сообщения
+                    }}
             }
         });
 
@@ -123,6 +129,9 @@ public class MainForm extends JFrame {
         loadMessageFormats();
     }
 
+    /**
+     * Загружает форматы сообщений из базы данных и добавляет их в комбобокс.
+     */
     private void loadMessageFormats() {
         MessageFormatDAO messageFormatDAO = new MessageFormatDAO();
         List<MessageFormat> formats = messageFormatDAO.getAllMessageFormats();
@@ -131,6 +140,9 @@ public class MainForm extends JFrame {
         }
     }
 
+    /**
+     * Сохраняет новое сообщение в базе данных.
+     */
     private void saveMessage() {
         String messageType = messageTypeField.getText();
         String messageContent = messageContentArea.getText();
@@ -146,25 +158,35 @@ public class MainForm extends JFrame {
             TTMMessageDAO ttmMessageDAO = new TTMMessageDAO();
             ttmMessageDAO.saveTTMMessage(message);
 
-
             messageTypeField.setText("");
             messageContentArea.setText("");
             messageFormatComboBox.setSelectedIndex(0);
         }
     }
 
+    /**
+     * Отображает расшифровку выбранного сообщения.
+     *
+     * @param messageId идентификатор сообщения
+     */
     private void displayDecryption(int messageId) {
         TTMMessageDAO ttmMessageDAO = new TTMMessageDAO();
         TTMMessage message = ttmMessageDAO.getTTMMessageById(messageId);
 
         if (message != null) {
-
             decryptionListModel.clear();
             String decryptedMessage = convertMessage(message.getMessageContent(), message.getFormatId());
             decryptionListModel.addElement(decryptedMessage);
         }
     }
 
+    /**
+     * Конвертирует зашифрованное сообщение в читаемый формат.
+     *
+     * @param encryptedMessage зашифрованное сообщение
+     * @param formatId идентификатор формата
+     * @return расшифрованное сообщение
+     */
     private String convertMessage(String encryptedMessage, int formatId) {
         List<SearadarStationMessage> convertedMessages;
 
@@ -178,13 +200,15 @@ public class MainForm extends JFrame {
             return "Неоднозначный формат";
         }
 
-
         if (!convertedMessages.isEmpty()) {
             return convertedMessages.get(0).toString();
         }
         return "Ошибка при расшифровке сообщения";
     }
 
+    /**
+     * Загружает сообщения из базы данных и отображает их в таблице.
+     */
     private void loadMessages() {
         TTMMessageDAO ttmMessageDAO = new TTMMessageDAO();
         MessageFormat selectedFormat = (MessageFormat) messageFormatComboBox.getSelectedItem();
@@ -192,20 +216,23 @@ public class MainForm extends JFrame {
             int formatId = selectedFormat.getId();
             List<TTMMessage> messages = ttmMessageDAO.getTTMMessagesByFormat(formatId);
 
-
             messagesTableModel.setRowCount(0);
             decryptionListModel.clear();
-
 
             for (TTMMessage message : messages) {
                 messagesTableModel.addRow(new Object[]{message.getId(), message.getMessageContent()});
             }
         }
-    }public static void main(String[] args) {
-
-        SwingUtilities.invokeLater(() -> {
-            MainForm form = new MainForm();
-            form.setVisible(true);
-        });
     }
+
+/**
+ * Точка входа в приложение.
+ *
+ * @param args аргументы командной строки
+ */public static void main(String[] args) {
+    SwingUtilities.invokeLater(() -> {
+        MainForm form = new MainForm();
+        form.setVisible(true);
+    });
+}
 }
